@@ -1,39 +1,10 @@
 from typing import List, Optional
 from fastapi import FastAPI, Depends
 from sqlalchemy.types import Integer, String
-from sqlalchemy import create_engine, text, Column, select, insert, delete, update
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy import text, Column, select, insert, delete, update
+from sqlalchemy.orm import Session
 from pydantic import BaseModel
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-NAME_BD = os.getenv('NAME_BD')
-USER_NAME = os.getenv('USER_NAME')
-PASSWORD = os.getenv('PASSWORD')
-SERVER_NAME = os.getenv('SERVER_NAME')
-
-
-
-
-SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://{USER_NAME}:{PASSWORD}@{SERVER_NAME}/{NAME_BD}"
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL
-)
-
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-Base = declarative_base()
-
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+from database import get_db, Base
 
 #
 # with engine.connect() as connection:
