@@ -1,7 +1,7 @@
 from typing import List, Optional
 from fastapi import FastAPI, Depends
 from sqlalchemy.types import Integer, String
-from sqlalchemy import text, Column, select, insert, delete, update
+from sqlalchemy import text, Column, select, insert, delete, update, join
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from database import get_db, Base
@@ -16,18 +16,36 @@ from database import get_db, Base
 
 app = FastAPI()
 
+
+class ItemsTwo(Base):
+    __tablename__ = "test2"
+
+    id = Column(Integer, primary_key=True)
+    options = Column(String)
+    title = Column(Integer)
+
 class Items(Base):
     __tablename__ = "test"
 
     id = Column(Integer, primary_key=True)
     name = Column(String)
     age = Column(Integer)
+    title = Column(Integer)
 
 
 class SchemaItems(BaseModel):
-    id: int
+    id: Optional[int] = None
     name: Optional[str] = None
     age: Optional[int] = None
+    title: Optional[int] = None
+
+    class Config:
+        orm_mode = True
+
+class SchemaItemsTwo(BaseModel):
+    id: int
+    options: Optional[str] = None
+    title: Optional[str] = None
 
     class Config:
         orm_mode = True
@@ -92,6 +110,18 @@ def add_item_in_list(bd: Session = Depends(get_db), id=int):
 
 
 
+# ///////////
+@app.get("/test2", response_model=List[SchemaItems])
+def get_all(bd: Session = Depends(get_db)):
+    q = select(Items).join(ItemsTwo).select_from(Items.title == ItemsTwo.id)
+    # qq = select(ItemsTwo.id)
+    # session.query(Customer.id, Customer.username, Order.id).join(Order).all()
+    # select(User).join(Address, User.id == Address.user_id)
+    # result2 = bd.execute(qq).all()
+    result = bd.execute(q).all()
+    print(result)
+    # print(result2)
+    return result
 #
 # mydb = mysql.connector.connect(
 #   host="server228.hosting.reg.ru",
