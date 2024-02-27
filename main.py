@@ -16,6 +16,20 @@ from database import get_db, Base
 
 app = FastAPI()
 
+# /////
+class core_join(Base):
+    __tablename__ = "core_join"
+
+    id = Column(Integer, primary_key=True)
+    category_name = Column(String)
+
+class join_1(Base):
+    __tablename__ = "join_1"
+
+    id = Column(Integer, primary_key=True)
+    category_id = Column(Integer)
+
+# ///////
 
 class ItemsTwo(Base):
     __tablename__ = "test2"
@@ -50,6 +64,13 @@ class SchemaItemsTwo(BaseModel):
     class Config:
         orm_mode = True
 
+
+class Test1(BaseModel):
+    id: int
+    category_name: Optional[str] = None
+
+    class Config:
+        orm_mode = True
 
 #GET - GET_ALL_ITEMS
 @app.get("/test", response_model=List[SchemaItems])
@@ -111,71 +132,13 @@ def add_item_in_list(bd: Session = Depends(get_db), id=int):
 
 
 # ///////////
-@app.get("/test2", response_model=List[SchemaItems])
+@app.get("/test2",response_model=List[Test1])
 def get_all(bd: Session = Depends(get_db)):
-    q = select(Items).join(ItemsTwo).select_from(Items.title == ItemsTwo.id)
-    # qq = select(ItemsTwo.id)
-    # session.query(Customer.id, Customer.username, Order.id).join(Order).all()
-    # select(User).join(Address, User.id == Address.user_id)
-    # result2 = bd.execute(qq).all()
-    result = bd.execute(q).all()
-    print(result)
-    # print(result2)
-    return result
-#
-# mydb = mysql.connector.connect(
-#   host="server228.hosting.reg.ru",
-#   user="u1704954_fastapi",
-#   password="u1704954_fastapi",
-#   database="u1704954_fastapi",
-# )
 
+        q = select(join_1.id, core_join.category_name).join(core_join,  core_join.id == join_1.category_id)
+        result = bd.execute(q).all()
 
-#
-# @app.get("/test")
-# def get_list_items():
-#     cursor = mydb.cursor()
-#     cursor.execute("SELECT * FROM test")
-#     result = cursor.fetchall()
-#     return {"test": result}
-#
-# @app.get("/test/{id}")
-# def get_one_item(id: int):
-#     cursor = mydb.cursor()
-#     cursor.execute(f"SELECT * FROM test WHERE id = {id}")
-#
-#     result = cursor.fetchone()
-#     return {"test": result}
-#
-# @app.put("/test/{id}")
-# def update_item(id:int, name:str, age:int):
-#     print(type(age))
-#     cursor = mydb.cursor()
-#     # почему то число принимает в name норм а стрингу нет
-#
-#     # sql = "UPDATE test SET name = {d} WHERE id = 2"
-#
-#     sql = "UPDATE test SET age = %s, name = %s WHERE id = %s"
-#     values = (age, name, id)
-#
-#     cursor.execute(sql, values)
-#     mydb.commit()
-#     return {"test": f"update {id}"}
-#
-# # Add a new item
-# @app.post("/test")
-# def add_item(name: str, age: int):
-#     cursor = mydb.cursor()
-#     sql = "INSERT INTO test (name, age) VALUES (%s, %s)"
-#     val = (name, age)
-#     cursor.execute(sql, val)
-#     mydb.commit()
-#     return {"message": "Item added successfully"}
-#
-# @app.delete("/test/{id}")
-# def delete_item(id: int):
-#     cursor = mydb.cursor()
-#     cursor.execute(f"DELETE FROM test WHERE id = {id}")
-#     mydb.commit()
-#     return {"message": "Item deleted successfully"}
-#
+        return result
+        # return [
+        #     dict(r._mapping) for r in result
+        # ]
