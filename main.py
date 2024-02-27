@@ -1,108 +1,39 @@
-from typing import List, Optional
+from typing import List
 from fastapi import FastAPI, Depends
-from sqlalchemy.types import Integer, String
-from sqlalchemy import text, Column, select, insert, delete, update, join
+from sqlalchemy import text, select, insert, delete, update
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
-from database import get_db, Base
-
-#
-# with engine.connect() as connection:
-#     sql = text('SELECT * FROM test')
-#     result = connection.execute(sql)
-    # # print(result)
-    # for row in result:
-    #     print(row)
+from database import get_db
+from models.example_join import Model_Table_ONE, Model_Table_TWO
+from schems.example_join import Schema_Model_Table_ONE
+from base_crud.schems.example_base_schema import Base_Schema_CRUD
+from base_crud.models.example_base_model import Base_Model_CRUD
 
 app = FastAPI()
 
-# /////
-class core_join(Base):
-    __tablename__ = "core_join"
-
-    id = Column(Integer, primary_key=True)
-    category_name = Column(String)
-
-class join_1(Base):
-    __tablename__ = "join_1"
-
-    id = Column(Integer, primary_key=True)
-    category_id = Column(Integer)
-
-# ///////
-
-class ItemsTwo(Base):
-    __tablename__ = "test2"
-
-    id = Column(Integer, primary_key=True)
-    options = Column(String)
-    title = Column(Integer)
-
-class Items(Base):
-    __tablename__ = "test"
-
-    id = Column(Integer, primary_key=True)
-    name = Column(String)
-    age = Column(Integer)
-    title = Column(Integer)
-
-
-class SchemaItems(BaseModel):
-    id: Optional[int] = None
-    name: Optional[str] = None
-    age: Optional[int] = None
-    title: Optional[int] = None
-
-    class Config:
-        orm_mode = True
-
-class SchemaItemsTwo(BaseModel):
-    id: int
-    options: Optional[str] = None
-    title: Optional[str] = None
-
-    class Config:
-        orm_mode = True
-
-
-class Test1(BaseModel):
-    id: int
-    category_name: Optional[str] = None
-
-    class Config:
-        orm_mode = True
 
 #GET - GET_ALL_ITEMS
-@app.get("/test", response_model=List[SchemaItems])
+@app.get("/base_crud", response_model=List[Base_Schema_CRUD])
 def get_all(bd: Session = Depends(get_db)):
-
-    q = select(Items.id)
-
+    q = select(Base_Model_CRUD.id, Base_Model_CRUD.name, Base_Model_CRUD.age, Base_Model_CRUD.title)
     result = bd.execute(q).all()
 
-
-    # with engine.connect() as connection:
-    #     sql = text('SELECT * FROM test')
-    #     result = connection.execute(sql).all()
-    #     print(result)
     return result
 
 
 # GET - GET_BY_ID_ITEM
-@app.get("/test/{item_id}")
+@app.get("/base_crud/{item_id}")
 def get_by_id(bd: Session = Depends(get_db), id=int):
-    q = select(Items)
-    q = q.where(Items.id == id)
-
+    q = select(Base_Model_CRUD)
+    q = q.where(Base_Model_CRUD.id == id)
     result = bd.scalar(q)
-    print(result)
+
     return result
 
 
 # POST - ADD NEW ITEM IN BD IN LIST
-@app.post("/test")
+@app.post("/base_crud")
 def add_item_in_list(bd: Session = Depends(get_db), name=str, age=int):
-    q = insert(Items).values(name=name, age=age)
+    q = insert(Base_Model_CRUD).values(name=name, age=age)
     result = bd.execute(q)
     bd.commit()
 
@@ -110,20 +41,19 @@ def add_item_in_list(bd: Session = Depends(get_db), name=str, age=int):
 
 
 # PUT - Change data in item by ID
-@app.put("/test/{item_id}")
+@app.put("/base_crud/{item_id}")
 def add_item_in_list(bd: Session = Depends(get_db), id=int, name=str, age=int):
-    q = update(Items).where(Items.id == id).values(name=name, age=age)
+    q = update(Base_Model_CRUD).where(Base_Model_CRUD.id == id).values(name=name, age=age)
     result = bd.execute(q)
-    print(result)
     bd.commit()
 
     return result
 
 # DELETE - Delete item by ID
-@app.delete("/test/{item_id}")
+@app.delete("/base_crud/{item_id}")
 def add_item_in_list(bd: Session = Depends(get_db), id=int):
-    q = delete(Items)
-    q = q.where(Items.id == id)
+    q = delete(Base_Model_CRUD)
+    q = q.where(Base_Model_CRUD.id == id)
     result = bd.execute(q)
     bd.commit()
 
@@ -131,11 +61,10 @@ def add_item_in_list(bd: Session = Depends(get_db), id=int):
 
 
 
-# ///////////
-@app.get("/test2",response_model=List[Test1])
+# example join
+@app.get("/base_join",response_model=List[Schema_Model_Table_ONE])
 def get_all(bd: Session = Depends(get_db)):
-
-        q = select(join_1.id, core_join.category_name).join(core_join,  core_join.id == join_1.category_id)
+        q = select(Model_Table_TWO.id, Model_Table_ONE.category_name).join(Model_Table_ONE,  Model_Table_ONE.id == Model_Table_TWO.category_id)
         result = bd.execute(q).all()
 
         return result
